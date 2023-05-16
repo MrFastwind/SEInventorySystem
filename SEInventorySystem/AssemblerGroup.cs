@@ -28,59 +28,42 @@ namespace IngameScript {
                 this.assemblers = assemblers;
             }
 
-            IMyInventory InputInventory { get; }
-            IMyInventory OutputInventory { get; }
+            bool CanUseBlueprint(MyDefinitionId blueprint) {
+                return assemblers.Any(x => x.CanUseBlueprint(blueprint));
+             }
 
-            bool IsProducing { get; }
-
-            bool IsQueueEmpty { get; }
-
-            void MoveQueueItemRequest(uint queueItemId, int targetIdx);
-
-            bool CanUseBlueprint(MyDefinitionId blueprint);
-
-            private IMyAssembler getEmptierAssembler() {
+            private bool addToEmptierAssembler(MyDefinitionId blueprint, MyFixedPoint ammount) {
                 int slotCount=0;
                 IMyAssembler selected=null;
                 var queue = new List<MyProductionItem>();
 
-                foreach (var assembler in assemblers){
-                    if (assembler.IsQueueEmpty) { return assembler; }
-
-                    assembler.GetQueue(queue);
-
-                    if (queue.Count < slotCount || selected == null) {
-                        selected = assembler;
-                        slotCount = queue.Count;
+                foreach (var item in assemblers){
+                    if (!item.CanUseBlueprint(blueprint)) continue;
+                    if (item.IsQueueEmpty) {
+                        selected.AddQueueItem(blueprint, ammount);
+                        return true;
                     }
 
+                    item.GetQueue(queue);
+                    if ((queue.Capacity != queue.Count && queue.Count < slotCount) || selected == null) {
+                        selected = item;
+                        slotCount = queue.Count;
+                    }
                 }
-
-                return selected;
+                if(selected != null) {
+                    selected.AddQueueItem(blueprint, ammount);
+                    return true;
+                }
+                return false;
             }
 
-            void AddQueueItem(MyDefinitionId blueprint, MyFixedPoint amount) {
-                
+            bool AddQueueItem(MyDefinitionId blueprint, MyFixedPoint amount) {
+                return addToEmptierAssembler(blueprint, amount);
             }
 
-            void AddQueueItem(MyDefinitionId blueprint, decimal amount);
+            void AddQueueItem(MyDefinitionId blueprint, decimal amount) => AddQueueItem(blueprint,amount);
 
-            void AddQueueItem(MyDefinitionId blueprint, double amount);
-
-
-            void InsertQueueItem(int idx, MyDefinitionId blueprint, MyFixedPoint amount);
-
-            void InsertQueueItem(int idx, MyDefinitionId blueprint, decimal amount);
-
-            void InsertQueueItem(int idx, MyDefinitionId blueprint, double amount);
-
-
-            void RemoveQueueItem(int idx, MyFixedPoint amount);
-
-            void RemoveQueueItem(int idx, decimal amount);
-
-            void RemoveQueueItem(int idx, double amount);
-
+            void AddQueueItem(MyDefinitionId blueprint, double amount) => AddQueueItem(blueprint, amount);
 
             void ClearQueue() {
                 foreach (var assembler in assemblers){
