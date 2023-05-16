@@ -31,7 +31,7 @@ namespace IngameScript {
         // to learn more about ingame scripts.
 
         List<IMyCubeBlock> inventoriesBlocks = new List<IMyCubeBlock>();
-        List<IMyAssembler> assemblers = new List<IMyAssembler>();
+        AssemblerGroup assemblersGroup = new AssemblerGroup();
         Dictionary<string, int> inventories = new Dictionary<string, int>();
         Dictionary<string, int> wantedValues = new Dictionary<string, int> {
             {"BulletproofGlass", 0 },
@@ -98,14 +98,22 @@ namespace IngameScript {
             // can be removed if not needed.
 
             Echo("AutoCrafter Started!");
-
+            if (assemblersGroup.Assemblers.Count==0) LoadAssemblers();
             DetermineItemsStock();
             DetermineItemsQueue();
-            Echo($"wanted: {wantedValues["SteelPlate"]}, stock: {itemsStock.GetValueOrDefault("SteelPlate",-1)}, queue: {itemsQueue.GetValueOrDefault("SteelPlate",-1)}");
+            foreach (var item in wantedValues)
+            {
+                if (item.Value > 0) {
+                    Echo($"{item.Key}: w: {wantedValues[item.Key]}, s: {itemsStock.GetValueOrDefault(item.Key, -1)}, q: {itemsQueue.GetValueOrDefault(item.Key, -1)}");
+
+                }
+
+            }
 
             foreach (var item in wantedValues){
                 var offset = item.Value - (itemsStock.GetValueOrDefault(item.Key, 0) + itemsQueue.GetValueOrDefault(item.Key, 0));
                 if (offset > 0) {
+                    Echo($"Quering {item.Key}");
                     AddItemToProductionQueue(item.Key, offset);
                 }
                                   
@@ -115,7 +123,6 @@ namespace IngameScript {
 
         private void ClearLists() {
             inventoriesBlocks.Clear();
-            assemblers.Clear();
             inventories.Clear();
             itemsStock.Clear();
             itemsQueue.Clear();
@@ -130,19 +137,12 @@ namespace IngameScript {
             return (string)type.SubtypeId;
         }
         private void LoadAssemblers() {
-            GridTerminalSystem.GetBlocksOfType(assemblers, x => x.Mode == MyAssemblerMode.Assembly && x.CooperativeMode==true);
+            assemblersGroup.Assemblers.Clear();
+            GridTerminalSystem.GetBlocksOfType(assemblersGroup.Assemblers, x => x.Mode == MyAssemblerMode.Assembly && x.CooperativeMode==true);
         }
 
         private bool AddItemToProductionQueue(string item,int amount) {
-            if (assemblers.Count == 0) LoadAssemblers();
-            var definition = GetMyDefinitionId(item);
-            foreach (var assembler in assemblers){
-                if (assembler.CanUseBlueprint(definition)) {
-                    assembler.AddQueueItem(definition, (MyFixedPoint) amount);
-                    return true;
-                }
-            }
-            return false;
+            return assemblersGroup.AddQueueItem(GetMyDefinitionId(item), (MyFixedPoint)amount);
         }
 
         private void DetermineItemsStock() {
@@ -172,21 +172,19 @@ namespace IngameScript {
         }
 
         private void DetermineItemsQueue() {
-            if(assemblers.Count == 0) LoadAssemblers();
+            var queue = new List<MyProductionItem>();
+            assemblersGroup.GetQueue(queue);
 
-            foreach (var block in assemblers) {
+            if (queue == null || queue.Count == 0) return;
 
-                var queue = new List<MyProductionItem>();
-                block.GetQueue(queue);
-
-                if (queue == null || queue.Count == 0) continue;
-
-                foreach (var item in queue) {
+            foreach (var item in queue) {
+                var name = GetNameFromDefinition(item.BlueprintId);
+                if (wantedValues.ContainsKey(name)) {
                     var value = 0;
-                    var name = GetNameFromDefinition(item.BlueprintId);
                     itemsQueue.TryGetValue(name, out value);
-                    itemsQueue[name] = value+(int)item.Amount;
+                    itemsQueue[name] = value + (int)item.Amount;
                 }
+                
             }
         }
 

@@ -21,34 +21,49 @@ using VRageMath;
 namespace IngameScript {
     partial class Program {
         public class AssemblerGroup {
+            List<IMyAssembler> assemblers;
 
-            ICollection<IMyAssembler> assemblers;
+            private List<MyProductionItem> queue = new List<MyProductionItem>();
 
-            public AssemblerGroup(ICollection<IMyAssembler> assemblers) {
-                this.assemblers = assemblers;
+            public List<IMyAssembler> Assemblers {
+                get {
+                    return assemblers;
+                }
+
+                set {
+                    assemblers = value;
+                }
+            }
+
+            public AssemblerGroup(List<IMyAssembler> assemblers) {
+                if(assemblers==null) assemblers=new List<IMyAssembler>();
+                this.Assemblers = assemblers;
+            }
+
+            public AssemblerGroup() {
+                this.Assemblers = new List<IMyAssembler>();
             }
 
             bool CanUseBlueprint(MyDefinitionId blueprint) {
-                return assemblers.Any(x => x.CanUseBlueprint(blueprint));
+                return Assemblers.Any(x => x.CanUseBlueprint(blueprint));
              }
 
             private bool addToEmptierAssembler(MyDefinitionId blueprint, MyFixedPoint ammount) {
                 int slotCount=0;
                 IMyAssembler selected=null;
-                var queue = new List<MyProductionItem>();
 
                 foreach (var item in assemblers){
-                    if (!item.CanUseBlueprint(blueprint)) continue;
+                    if (item==null || !item.CanUseBlueprint(blueprint)) continue;
                     if (item.IsQueueEmpty) {
-                        selected.AddQueueItem(blueprint, ammount);
+                        item.AddQueueItem(blueprint, ammount);
                         return true;
                     }
-
                     item.GetQueue(queue);
-                    if ((queue.Capacity != queue.Count && queue.Count < slotCount) || selected == null) {
+                    if ((50 > queue.Count && queue.Count < slotCount) || selected == null) {
                         selected = item;
                         slotCount = queue.Count;
                     }
+                    queue.Clear();
                 }
                 if(selected != null) {
                     selected.AddQueueItem(blueprint, ammount);
@@ -57,23 +72,21 @@ namespace IngameScript {
                 return false;
             }
 
-            bool AddQueueItem(MyDefinitionId blueprint, MyFixedPoint amount) {
+            public bool AddQueueItem(MyDefinitionId blueprint, MyFixedPoint amount) {
                 return addToEmptierAssembler(blueprint, amount);
             }
 
-            void AddQueueItem(MyDefinitionId blueprint, decimal amount) => AddQueueItem(blueprint,amount);
-
-            void AddQueueItem(MyDefinitionId blueprint, double amount) => AddQueueItem(blueprint, amount);
-
-            void ClearQueue() {
-                foreach (var assembler in assemblers){
+            public void ClearQueue() {
+                foreach (var assembler in Assemblers){
                     assembler.ClearQueue();
                 }
             }
 
-            void GetQueue(List<MyProductionItem> items) {
+            public void GetQueue(List<MyProductionItem> items) {
+                var queue = new List<MyProductionItem>();
                 foreach (var assembler in assemblers) {
-                    assembler.GetQueue(items);                
+                    assembler.GetQueue(queue);
+                    items.AddList(queue);
                 }
             }
         }
