@@ -1,29 +1,12 @@
-﻿using Sandbox.Game.EntityComponents;
-using Sandbox.ModAPI;
-using Sandbox.ModAPI.Ingame;
-using Sandbox.ModAPI.Interfaces;
-using SpaceEngineers.Game.ModAPI.Ingame;
-using System;
-using System.Collections;
+﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using VRage;
-using VRage.Collections;
 using VRage.Game;
-using VRage.Game.Components;
-using VRage.Game.GUI.TextPanel;
-using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Ingame;
-using VRage.Game.ModAPI.Ingame.Utilities;
-using VRage.Game.ObjectBuilders.Definitions;
-using VRage.ObjectBuilders;
-using VRageMath;
 
-namespace IngameScript
-{
+namespace IngameScript {
     partial class Program : MyGridProgram
     {
         // This file contains your actual script.
@@ -47,8 +30,8 @@ namespace IngameScript
         //
         // to learn more about ingame scripts.
 
-        List<VRage.Game.ModAPI.Ingame.IMyCubeBlock> inventoriesBlocks = new List<VRage.Game.ModAPI.Ingame.IMyCubeBlock>();
-        List<Sandbox.ModAPI.Ingame.IMyAssembler> assemblers = new List<Sandbox.ModAPI.Ingame.IMyAssembler>();
+        List<IMyCubeBlock> inventoriesBlocks = new List<IMyCubeBlock>();
+        List<IMyAssembler> assemblers = new List<IMyAssembler>();
         Dictionary<string, int> inventories = new Dictionary<string, int>();
         Dictionary<string, int> wantedValues = new Dictionary<string, int> {
             {"BulletproofGlass", 0 },
