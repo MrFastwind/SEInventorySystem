@@ -142,7 +142,7 @@ namespace IngameScript {
         }
 
         private bool AddItemToProductionQueue(string item,int amount) {
-            return assemblersGroup.AddQueueItem(GetMyDefinitionId(item), (MyFixedPoint)amount);
+            return assemblersGroup.AddQueueItem(LabelConverter.getBlueprintDefinitionByName(item), (MyFixedPoint)amount);
         }
 
         private void DetermineItemsStock() {
@@ -198,23 +198,6 @@ namespace IngameScript {
                     break;
             }
             return name;
-        }
-
-        private static MyDefinitionId GetMyDefinitionId(string item) {
-            var def = "MyObjectBuilder_BlueprintDefinition/";
-            switch (item) {
-                // where we just add "component"
-                case "Construction":
-                case "Computer":
-                case "Motor":
-                    def += item + "Component";
-                    break;
-                // nothing to change
-                default:
-                    def += item;
-                    break;
-            }
-            return MyDefinitionId.Parse(def);
         }
 
         private static string GetMyDefinitionIdAsString(string item) {
