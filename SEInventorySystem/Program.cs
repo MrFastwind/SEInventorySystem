@@ -142,7 +142,7 @@ namespace IngameScript {
         }
 
         private bool AddItemToProductionQueue(string item,int amount) {
-            return assemblersGroup.AddQueueItem(LabelConverter.getBlueprintDefinitionByName(item), (MyFixedPoint)amount);
+            return assemblersGroup.AddQueueItem(LabelConverter.GetBlueprintDefinitionByName(item), (MyFixedPoint)amount);
         }
 
         private void DetermineItemsStock() {
@@ -178,7 +178,7 @@ namespace IngameScript {
             if (queue == null || queue.Count == 0) return;
 
             foreach (var item in queue) {
-                var name = GetNameFromDefinition(item.BlueprintId);
+                var name = LabelConverter.GetNameByDefinition(item.BlueprintId);
                 if (wantedValues.ContainsKey(name)) {
                     var value = 0;
                     itemsQueue.TryGetValue(name, out value);
@@ -187,35 +187,5 @@ namespace IngameScript {
                 
             }
         }
-
-        private static string GetNameFromDefinition(MyDefinitionId def) {
-            var name = def.SubtypeId.ToString();
-            switch (name) {
-                case "ConstructionComponent":
-                case "ComputerComponent":
-                case "MotorComponent":
-                    name = name.Replace("Component", "");
-                    break;
-            }
-            return name;
-        }
-
-        private static string GetMyDefinitionIdAsString(string item) {
-            var def = "MyObjectBuilder_BlueprintDefinition/";
-            switch (item) {
-                // where we just add "component"
-                case "Construction":
-                case "Computer":
-                case "Motor":
-                    def += item + "Component";
-                    break;
-                // nothing to change
-                default:
-                    def += item;
-                    break;
-            }
-            return def;
-        }
-
     }
 }
