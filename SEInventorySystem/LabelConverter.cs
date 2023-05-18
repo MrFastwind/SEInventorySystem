@@ -2,9 +2,9 @@
 
 namespace IngameScript {
     partial class Program {
-        public class LabelConverter{
+        public static class LabelConverter{
 
-            public MyDefinitionId getBlueprintDefinitionByName(string name) {
+            public static MyDefinitionId getBlueprintDefinitionByName(string name) {
 
                 string def = "MyObjectBuilder_BlueprintDefinition/";
 
