@@ -22,7 +22,7 @@ namespace IngameScript {
                         break;
                     // Magazines
                     case "NATO_25x184mm":
-                        def += "Magazine";
+                        def += name + "Magazine";
                         break;
 
                     // Ores
@@ -89,14 +89,8 @@ namespace IngameScript {
 
 
                 switch (name) {
-                    case "LargeCalibreAmmo":
-                        return "ArtilleryShell";
-                    case "MediumCalibreAmmo":
-                        return "AssaultCannonShell";
-                    case "AutocannonClip":
-                        return "AutocannonMagazine";
                     // Magazines
-                    case "Magazine":
+                    case "NATO_25x184mmMagazine":
                         return "NATO_25x184mm";
                     // nothing to change
                     default:
