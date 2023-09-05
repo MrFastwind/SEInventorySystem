@@ -13,6 +13,9 @@ namespace IngameScript {
         private List<IMyCubeBlock> inventoriesBlocks = new List<IMyCubeBlock>();
         private AssemblerGroup assemblersGroup = new AssemblerGroup();
         private Dictionary<string, int> inventories = new Dictionary<string, int>();
+
+        private string assemblerLabel = "";
+        private bool assemblerCoperativeNeeded = true;
         private Dictionary<string, int> wantedValues = new Dictionary<string, int> {
             {"BulletproofGlass", 0 },
             {"Canvas", 0 },
@@ -98,7 +101,10 @@ namespace IngameScript {
         }
         private void LoadAssemblers() {
             assemblersGroup.Assemblers.Clear();
-            GridTerminalSystem.GetBlocksOfType(assemblersGroup.Assemblers, x => x.Mode == MyAssemblerMode.Assembly && x.CooperativeMode==true);
+            GridTerminalSystem.GetBlocksOfType(assemblersGroup.Assemblers, 
+                x => x.Mode == MyAssemblerMode.Assembly 
+                && (assemblerCoperativeNeeded || x.CooperativeMode==true)
+                && x.CustomNameWithFaction.Contains(assemblerLabel));
         }
 
         private bool AddItemToProductionQueue(string item,int amount) {
