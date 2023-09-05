@@ -24,6 +24,8 @@ namespace IngameScript {
             List<IMyAssembler> assemblers;
 
             private List<MyProductionItem> queue = new List<MyProductionItem>();
+            Dictionary<IMyAssembler, int> occupationLevels = new Dictionary<IMyAssembler, int>();
+            private readonly int MAX_ASSEMBLERS_SLOTS = 50;
 
             public List<IMyAssembler> Assemblers {
                 get {
@@ -48,7 +50,7 @@ namespace IngameScript {
                 return Assemblers.Any(x => x.CanUseBlueprint(blueprint));
              }
 
-            private bool addToEmptierAssembler(MyDefinitionId blueprint, MyFixedPoint ammount) {
+            private bool addToEmptiestAssembler(MyDefinitionId blueprint, MyFixedPoint ammount) {
                 int slotCount=0;
                 IMyAssembler selected=null;
 
@@ -59,7 +61,7 @@ namespace IngameScript {
                         return true;
                     }
                     item.GetQueue(queue);
-                    if ((50 > queue.Count && queue.Count < slotCount) || selected == null) {
+                    if ((MAX_ASSEMBLERS_SLOTS > queue.Count && queue.Count < slotCount) || selected == null) {
                         selected = item;
                         slotCount = queue.Count;
                     }
@@ -72,8 +74,45 @@ namespace IngameScript {
                 return false;
             }
 
+            /*
+             * Balanced alternative, Not Tested
+             */
+            private bool addToAssemblerBalanced(MyDefinitionId blueprint, MyFixedPoint ammount) {
+                occupationLevels.Clear();
+                foreach (var assembler in assemblers) {
+                    if (assembler == null || !assembler.CanUseBlueprint(blueprint)) continue;
+                    
+                    assembler.GetQueue(queue);
+                    if (queue.Count >= MAX_ASSEMBLERS_SLOTS) {
+                        occupationLevels.Add(assembler, queue.Count);
+                    }
+                    queue.Clear();
+                }
+
+                if (occupationLevels.Count == 0) {
+                    return false;
+                }
+
+                List<IMyAssembler> selected = occupationLevels
+                    .OrderBy(x => x.Value)
+                    .Take((int)Math.Ceiling(occupationLevels.Keys.Count * 0.8))
+                    .Select(x => x.Key)
+                    .ToList();
+                if (selected.Count == 0) {
+                    return false;
+                }
+
+                MyFixedPoint quantity = (MyFixedPoint) (((int)ammount) / selected.Count);
+                MyFixedPoint remainder = (MyFixedPoint) (((int)ammount) % selected.Count);
+                selected[0].AddQueueItem(blueprint, quantity + remainder);
+                foreach(IMyAssembler assembler in selected.Skip(1)) {
+                    assembler.AddQueueItem(blueprint, quantity);
+                }
+                return true;
+            }
+
             public bool AddQueueItem(MyDefinitionId blueprint, MyFixedPoint amount) {
-                return addToEmptierAssembler(blueprint, amount);
+                return addToEmptiestAssembler(blueprint, amount);
             }
 
             public void ClearQueue() {
